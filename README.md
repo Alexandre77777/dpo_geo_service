@@ -7,6 +7,20 @@
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![OSM](https://img.shields.io/badge/Data-OpenStreetMap-brightgreen.svg)
 
+---
+
+**Геосервис был развернут на занятии и доступен онлайн.** 
+
+Вы можете протестировать его в браузере без установки:
+
+<div align="center">
+  
+### [🌐 Открыть GeoAnalytics Service](https://dpo-geo-service.streamlit.app/)
+
+</div>
+
+---
+
 ## 🎬 Демонстрация
 
 ![Демонстрация работы сервиса](demo.gif)
@@ -24,17 +38,6 @@
 - 🎨 **Визуализация** — интерактивная карта с цветовым кодированием результатов
 - 📥 **Экспорт** — выгрузка результатов в формате GeoJSON
 
-## 🚀 Попробуйте прямо сейчас!
-
-**Геосервис был развернут на занятии и доступен онлайн.** 
-
-Вы можете протестировать его в браузере без установки:
-
-<div align="center">
-  
-### [🌐 Открыть GeoAnalytics Service](https://dpo-geo-service.streamlit.app/)
-
-</div>
 
 ## 🏗️ Архитектура
 
