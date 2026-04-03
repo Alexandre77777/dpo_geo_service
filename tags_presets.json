@@ -1,0 +1,52 @@
+{
+  "presets": [
+    {
+      "name": "Школы",
+      "key": "amenity",
+      "value": "school",
+      "buffer": 1600
+    },
+    {
+      "name": "Метро",
+      "key": "railway",
+      "value": "subway_entrance",
+      "buffer": 1600
+    },
+    {
+      "name": "Велодорожки",
+      "key": "highway",
+      "value": "cycleway",
+      "buffer": 1600
+    },
+    {
+      "name": "Парки",
+      "key": "leisure",
+      "value": "park",
+      "buffer": 800
+    },
+    {
+      "name": "Детские сады",
+      "key": "amenity",
+      "value": "kindergarten",
+      "buffer": 800
+    },
+    {
+      "name": "Поликлиники",
+      "key": "amenity",
+      "value": "clinic",
+      "buffer": 1600
+    },
+    {
+      "name": "Автобусные остановки",
+      "key": "highway",
+      "value": "bus_stop",
+      "buffer": 400
+    },
+    {
+      "name": "Супермаркеты",
+      "key": "shop",
+      "value": "supermarket",
+      "buffer": 800
+    }
+  ]
+}
