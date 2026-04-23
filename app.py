@@ -259,6 +259,58 @@ with control_col:
                 )
     else:
         st.info("Добавьте хотя бы один слой (тэг) для анализа.")
+    
+    # ------------------------------------
+    # Обработка кнопки "Очистить"
+    # ------------------------------------
+    if clear_btn and has_results:
+        st.session_state.results = None
+        st.rerun()
+    
+    # ------------------------------------
+    # Обработка кнопки "Запустить анализ"
+    # ------------------------------------
+    if run_btn:
+        # Валидация входных данных
+        if not st.session_state.bbox:
+            st.error("Сначала выберите область на карте!")
+        elif not all_tags:
+            st.error("Добавьте хотя бы один слой (тэг)!")
+        else:
+            # Фильтрация нулевых весов
+            effective_weights = {
+                n: w for n, w in weights.items()
+                if abs(w) > 1e-6
+            } or None
+            
+            # Показываем индикатор загрузки
+            with status_placeholder.container():
+                with st.spinner("Выполняется анализ..."):
+                    try:
+                        # ═══════════════════════════════════
+                        # ВЫЗОВ БЭКЕНДА
+                        # ═══════════════════════════════════
+                        # Это единственное место, где фронтенд
+                        # взаимодействует с бэкендом
+                        res = run_analysis(
+                            bbox=st.session_state.bbox,
+                            tags_config=all_tags,
+                            weights=effective_weights,
+                            h3_resolution=h3_res,
+                        )
+                        
+                        # Сохраняем результаты в session state
+                        st.session_state.results = (
+                            res[0] if isinstance(res, tuple) else res
+                        )
+                        
+                        # Обновляем локальные переменные для текущего прогона
+                        # чтобы карта сразу отрисовалась с результатами
+                        has_results = True
+                        results_geo = st.session_state.results.to_crs("EPSG:4326")
+                        
+                    except Exception as e:
+                        st.error(f"Ошибка: {e}")
 
 # ═══════════════════════════════════════════════════════════════════════════
 #                          КАРТА (ЛЕВАЯ КОЛОНКА)
@@ -297,6 +349,10 @@ with map_col:
         # Определение диапазона значений для цветовой шкалы
         min_val = float(results_geo["index_score"].min())
         max_val = float(results_geo["index_score"].max())
+        
+        # Защита от вырожденного диапазона (все значения одинаковы)
+        if max_val - min_val < 1e-9:
+            max_val = min_val + 1.0
         
         # Создание ступенчатой цветовой шкалы
         # Палитра: красный → жёлтый → зелёный (плохо → хорошо)
@@ -352,11 +408,13 @@ with map_col:
     # ------------------------------------
     # Отображение карты в Streamlit
     # ------------------------------------
+    # Ключ зависит от состояния результатов — это заставляет
+    # Streamlit пересоздать виджет при смене содержимого карты
     output = st_folium(
         m,
         use_container_width=True,
         height=1000,
-        key="map",
+        key=f"map_{'results' if has_results else 'empty'}",
     )
     
     # ------------------------------------
@@ -377,62 +435,10 @@ with map_col:
         if coords:
             # Вычисление bounding box
             lons, lats = zip(*coords)
-            st.session_state.bbox = [
+            new_bbox = [
                 min(lons), min(lats),    # west, south
                 max(lons), max(lats)     # east, north
             ]
-
-# ═══════════════════════════════════════════════════════════════════════════
-#                          ЛОГИКА КНОПОК
-# ═══════════════════════════════════════════════════════════════════════════
-
-with control_col:
-    # ------------------------------------
-    # Обработка кнопки "Очистить"
-    # ------------------------------------
-    if clear_btn and has_results:
-        st.session_state.results = None
-        st.rerun()
-    
-    # ------------------------------------
-    # Обработка кнопки "Запустить анализ"
-    # ------------------------------------
-    if run_btn:
-        # Валидация входных данных
-        if not st.session_state.bbox:
-            st.error("Сначала выберите область на карте!")
-        elif not all_tags:
-            st.error("Добавьте хотя бы один слой (тэг)!")
-        else:
-            # Фильтрация нулевых весов
-            effective_weights = {
-                n: w for n, w in weights.items()
-                if abs(w) > 1e-6
-            } or None
-            
-            # Показываем индикатор загрузки
-            with status_placeholder.container():
-                with st.spinner("Выполняется анализ..."):
-                    try:
-                        # ═══════════════════════════════════
-                        # ВЫЗОВ БЭКЕНДА
-                        # ═══════════════════════════════════
-                        # Это единственное место, где фронтенд
-                        # взаимодействует с бэкендом
-                        res = run_analysis(
-                            bbox=st.session_state.bbox,
-                            tags_config=all_tags,
-                            weights=effective_weights,
-                            h3_resolution=h3_res,
-                        )
-                        
-                        # Сохраняем результаты в session state
-                        st.session_state.results = (
-                            res[0] if isinstance(res, tuple) else res
-                        )
-                        
-                        # Перезапуск для отображения результатов
-                        st.rerun()
-                        
-                    except Exception as e:
-                        st.error(f"Ошибка: {e}")
+            # Защита от лишних ререндеров — обновляем только при реальном изменении
+            if st.session_state.bbox != new_bbox:
+                st.session_state.bbox = new_bbox
